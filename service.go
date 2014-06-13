@@ -20,6 +20,7 @@ type Service struct {
 	ghastly *Ghastly
 }
 
+// Get a service with the ID string.
 func (g *Ghastly)GetService(id string) (*Service, error) {
 	url := makeServiceURL(id)
 	resp, err := g.Get(url)
@@ -33,10 +34,17 @@ func (g *Ghastly)GetService(id string) (*Service, error) {
 	return g.populateService(sData)
 }
 
+/*
 func (g *Ghastly)ListServices() ([]*Service, error) {
 	return nil, nil
 }
 
+func (g *Ghastly)SearchServices(params map[string]string) ([]*Service, error) {
+
+}
+*/
+
+// Create a new service.
 func (g *Ghastly)NewService(name string) (*Service, error) {
 	params := map[string]string{ "name": name }
 	resp, err := g.PostFormParams("/service", params)
@@ -74,6 +82,7 @@ func (s *Service) Delete() error {
 	return nil
 }
 
+// Make the base URL for this service for performing tasks.
 func (s *Service)TaskURL(taskPath string) string {
 	serviceURL := makeServiceURL(s.Id)
 	url := fmt.Sprintf("%s/%s", serviceURL, taskPath)
