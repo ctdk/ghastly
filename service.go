@@ -35,6 +35,7 @@ func (g *Ghastly)GetService(id string) (*Service, error) {
 	return g.populateService(sData)
 }
 
+// List the current services.
 func (g *Ghastly)ListServices() ([]*Service, error) {
 	resp, err := g.Get("/service")
 	if err != nil {
@@ -65,11 +66,19 @@ func (g *Ghastly)ListServices() ([]*Service, error) {
 	return nil, nil
 }
 
-/* 
-func (g *Ghastly)SearchServices(searchStr string) ([]*Service, error) {
+// Search for a service by name. The API does not appear to permit wildcards at
+// this time.
+func (g *Ghastly)SearchServices(searchStr string) (*Service, error) {
+	params := map[string]string{ "name": searchStr }
+	searchURL := makeServiceURL("search")
+	resp, err := g.GetParams(searchURL, params)
+	if err != nil {
+		return nil, err
+	}
 
+	s, err := ParseJson(resp.Body)
+	return g.populateService(s)
 }
-*/
 
 // Create a new service.
 func (g *Ghastly)NewService(name string) (*Service, error) {

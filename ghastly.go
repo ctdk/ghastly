@@ -74,6 +74,27 @@ func (c *Client) Get(url string) (*http.Response, error) {
 	return resp, nil
 }
 
+// Convenience wrapper for GET requests with query parameters.
+func (c *Client) GetParams(baseURL string, queryParams map[string]string) (*http.Response, error) {
+	u, err := url.Parse(c.makeURL(baseURL))
+	if err != nil {
+		return nil, err
+	}
+	q := u.Query()
+	for k, v := range queryParams {
+		q.Set(k, v)
+	}
+	u.RawQuery = q.Encode()
+	resp, err := c.Http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+	if err = c.checkRespErr(resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 // Convenience wrapper around http.Client.PostForm.
 func (c *Client) PostForm(url string, data url.Values) (*http.Response, error) {
 	resp, err := c.Http.PostForm(c.makeURL(url), data)
