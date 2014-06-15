@@ -3,6 +3,7 @@ package ghastly
 import (
 	"time"
 	"fmt"
+	"encoding/json"
 )
 
 // A Service is a particular website, app, etc. served through Fastly. They are
@@ -34,12 +35,38 @@ func (g *Ghastly)GetService(id string) (*Service, error) {
 	return g.populateService(sData)
 }
 
-/*
 func (g *Ghastly)ListServices() ([]*Service, error) {
+	resp, err := g.Get("/service")
+	if err != nil {
+		return nil, err
+	}
+
+	var s interface{}
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&s); err != nil {
+		return nil, err
+	}
+
+	servicesData := s.([]interface{})
+	if err != nil {
+		return nil, err
+	}
+	
+	services := make([]*Service, len(servicesData))
+	for i, v := range servicesData {
+		ss, err := g.populateService(v.(map[string]interface{}))
+		if err != nil {
+			return nil, err
+		}
+		services[i] = ss
+	}
+	return services, nil
+
 	return nil, nil
 }
 
-func (g *Ghastly)SearchServices(params map[string]string) ([]*Service, error) {
+/* 
+func (g *Ghastly)SearchServices(searchStr string) ([]*Service, error) {
 
 }
 */
@@ -60,16 +87,30 @@ func (g *Ghastly)NewService(name string) (*Service, error) {
 }
 
 func (g *Ghastly)populateService(serviceData map[string]interface{}) (*Service, error) {
-	createdAt, err := time.Parse(time.RFC3339, serviceData["created_at"].(string))
-	if err != nil {
-		return nil, err
+	s := new(Service)
+	s.Id = serviceData["id"].(string)
+	s.Name = serviceData["name"].(string)
+	s.CustomerId = serviceData["customer_id"].(string)
+	s.PublishKey, _ = serviceData["publish_key"].(string)
+	s.Comment, _ = serviceData["comment"].(string)
+	s.ghastly = g 
+
+	if cc, ok := serviceData["created_at"].(string); ok {
+		createdAt, err := time.Parse(time.RFC3339, cc)
+		if err != nil {
+			return nil, err
+		}
+		s.CreatedAt = createdAt
 	}
-	updatedAt, err := time.Parse(time.RFC3339, serviceData["updated_at"].(string))
-	if err != nil {
-		return nil, err
+	if uc, ok := serviceData["created_at"].(string); ok {
+		updatedAt, err := time.Parse(time.RFC3339, uc)
+		if err != nil {
+			return nil, err
+		}
+		s.UpdatedAt = updatedAt
 	}
-	
-	return &Service{ Id: serviceData["id"].(string), Name: serviceData["name"].(string), CustomerId: serviceData["customer_id"].(string), PublishKey: serviceData["publish_key"].(string), Comment: serviceData["comment"].(string), CreatedAt: createdAt, UpdatedAt: updatedAt, ghastly: g }, nil
+
+	return s, nil
 }
 
 // Delete a service and everything attached to it.

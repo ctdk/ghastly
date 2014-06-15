@@ -93,3 +93,9 @@ func (v *Version) Clone() (*Version, error) {
 
 	return v.service.populateVersion(vData)
 }
+
+/*
+func (v *Version) Activate() error {
+
+}
+*/

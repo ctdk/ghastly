@@ -65,6 +65,29 @@ func TestService(t *testing.T) {
 	}
 }
 
+func TestListServices(t *testing.T) {
+	login_opts := make(map[string]string)
+	login_opts["user"] = os.Getenv("FASTLY_TEST_USER")
+	login_opts["password"] = os.Getenv("FASTLY_TEST_PASSWORD")
+	g, err := New(login_opts)
+	if err != nil {
+		t.Errorf("Error logging into fastly: %s", err.Error())
+	}
+	serviceName := makeServiceName()
+	serviceName2 := makeServiceName()
+	g1, err := g.NewService(serviceName)
+	g2, err := g.NewService(serviceName2)
+	defer g1.Delete()
+	defer g2.Delete()
+	services, err := g.ListServices()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if len(services) == 0 {
+		t.Errorf("Expected services to be listed, but got zero back.")
+	}
+}
+
 func TestVersion(t *testing.T) {
 	login_opts := make(map[string]string)
 	login_opts["user"] = os.Getenv("FASTLY_TEST_USER")
