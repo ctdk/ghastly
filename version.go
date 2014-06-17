@@ -95,6 +95,9 @@ func (v *Version) Clone() (*Version, error) {
 	return v.service.populateVersion(vData)
 }
 
+/*
+// Activate this version of the service.
 func (v *Version) Activate() error {
 
 }
+*
