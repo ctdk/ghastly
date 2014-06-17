@@ -1,23 +1,24 @@
-//Package ghastly provides a golang interface for using the Fastly 
+//Package ghastly provides a golang interface for using the Fastly
 //(http://www.fastly.com) CDN's API.
 package ghastly
 
 import (
-	"net/http"
-	"net/url"
-	"fmt"
-	"net/http/cookiejar"
-	"io"
-	"path"
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/cookiejar"
+	"net/url"
+	"path"
+	"strings"
 )
 
 type Client struct {
-	ApiKey string
-	User string
+	ApiKey   string
+	User     string
 	Password string
-	BaseUrl string
-	Http *http.Client
+	BaseUrl  string
+	Http     *http.Client
 }
 
 type Ghastly struct {
@@ -49,7 +50,7 @@ func login(username, password string, base_url string) (*Client, error) {
 	if jerr != nil {
 		return nil, jerr
 	}
-	client.Http = &http.Client{ Jar: jar}
+	client.Http = &http.Client{Jar: jar}
 	resp, err := client.PostForm("/login", values)
 	if err != nil {
 		return nil, err
@@ -121,7 +122,7 @@ func (c *Client) PostFormParams(url string, params map[string]string) (*http.Res
 }
 
 // Convenience wrapper around http.Client.Post.
-func (c *Client) Post (url string, bodyType string, body io.Reader) (*http.Response, error) {
+func (c *Client) Post(url string, bodyType string, body io.Reader) (*http.Response, error) {
 	resp, err := c.Http.Post(c.makeURL(url), bodyType, body)
 	if err != nil {
 		return nil, err
@@ -149,8 +150,10 @@ func (c *Client) Delete(url string) (*http.Response, error) {
 }
 
 // Convenience wrapper for PUT requests.
-func (c *Client) Put(url string, data url.Values) (*http.Response, error) {
-	request, err := http.NewRequest("PUT", c.makeURL(url), nil)
+func (c *Client) Put(url string, data url.Values, contentType ...string) (*http.Response, error) {
+	bodyStr := data.Encode()
+	request, err := http.NewRequest("PUT", c.makeURL(url), strings.NewReader(bodyStr))
+	request.Header.Set("content-type", setContentType(cType))
 	if err != nil {
 		return nil, err
 	}
@@ -162,6 +165,23 @@ func (c *Client) Put(url string, data url.Values) (*http.Response, error) {
 		return nil, err
 	}
 	return resp, nil
+}
+
+// Convenience wrapper for PUT requests, taking a map of strings to create the
+// url.Values to send.
+func (c *Client) PutParams(url string, params map[string]string) (*http.Response, error) {
+	values := c.makeValues(params)
+	return c.Put(url, values, "application/x-www-form-urlencoded")
+}
+
+func setContentType(contentType []string) string {
+	var cType string
+	if contentType != nil {
+		cType = contentType[0]
+	} else {
+		cType = "application/json"
+	}
+	return cType
 }
 
 func (c *Client) makeURL(url string) string {

@@ -1,32 +1,33 @@
 package ghastly
 
 import (
-	"time"
 	"fmt"
+	"time"
 )
+
 // A version of the configuration for a particular service. Backends, domains,
 // etc. belong to a particular version.
 type Version struct {
-	Number int64
+	Number    int64
 	ServiceId string
-	Active bool
-	Locked bool
-	Comment string
-	Testing bool
-	Staging bool
-	Deployed bool
-	Network VersionNetwork
+	Active    bool
+	Locked    bool
+	Comment   string
+	Testing   bool
+	Staging   bool
+	Deployed  bool
+	Network   VersionNetwork
 	deletedAt time.Time
-	service *Service
+	service   *Service
 }
 
 type VersionNetwork struct {
-	Name string
-	Description string
-	AvailableAll bool
+	Name                string
+	Description         string
+	AvailableAll        bool
 	AvailableRestricted bool
-	AvailablePrivate bool
-	CustomerId string
+	AvailablePrivate    bool
+	CustomerId          string
 }
 
 func (s *Service) populateVersion(versionData map[string]interface{}) (*Version, error) {
@@ -36,12 +37,12 @@ func (s *Service) populateVersion(versionData map[string]interface{}) (*Version,
 	staging, _ := versionData["staging"].(bool)
 	deployed, _ := versionData["deployed"].(bool)
 	comment, _ := versionData["comment"].(string)
-	return &Version{ Number: int64(versionData["number"].(float64)), ServiceId: versionData["service_id"].(string), Active: active, Locked: locked, Comment: comment, Testing: testing, Staging: staging, Deployed: deployed, service: s }, nil
+	return &Version{Number: int64(versionData["number"].(float64)), ServiceId: versionData["service_id"].(string), Active: active, Locked: locked, Comment: comment, Testing: testing, Staging: staging, Deployed: deployed, service: s}, nil
 }
 
 // Create a brand new, pristine version of a service, with nothing in it.
 func (s *Service) NewVersion() (*Version, error) {
-	params := map[string]string{ "service": s.Id }
+	params := map[string]string{"service": s.Id}
 	url := s.TaskURL("/version")
 	resp, err := s.ghastly.PostFormParams(url, params)
 	if err != nil {
@@ -94,8 +95,6 @@ func (v *Version) Clone() (*Version, error) {
 	return v.service.populateVersion(vData)
 }
 
-/*
 func (v *Version) Activate() error {
 
 }
-*/

@@ -1,10 +1,10 @@
 package ghastly
 
 import (
-	"testing"
-	"os"
 	"fmt"
 	"math/rand"
+	"os"
+	"testing"
 	"time"
 )
 
@@ -65,6 +65,36 @@ func TestService(t *testing.T) {
 	}
 }
 
+func TestServiceDetail(t *testing.T) {
+	login_opts := make(map[string]string)
+	login_opts["user"] = os.Getenv("FASTLY_TEST_USER")
+	login_opts["password"] = os.Getenv("FASTLY_TEST_PASSWORD")
+	g, err := New(login_opts)
+	if err != nil {
+		t.Errorf("Error logging into fastly: %s", err.Error())
+	}
+	serviceName := makeServiceName()
+	s, err := g.NewService(serviceName)
+	defer s.Delete()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	s2, err := g.GetService(s.Id)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	s3, err := s2.Details()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if s2.Id != s3.Id {
+		t.Errorf("The normal and detailed services were not the same service.")
+	}
+	if s2.CreatedAt == s3.CreatedAt {
+		t.Errorf("The detailed service does not seem to actually have different details.")
+	}
+}
+
 func TestListServices(t *testing.T) {
 	login_opts := make(map[string]string)
 	login_opts["user"] = os.Getenv("FASTLY_TEST_USER")
@@ -110,6 +140,36 @@ func TestSearchServices(t *testing.T) {
 	searched, err := g.SearchServices("omg-totally-fake")
 	if err == nil {
 		t.Errorf("Searching for 'omg-totally-fake' should have failed, but unexpectedly succeeded, returning id %s.", searched.Id)
+	}
+}
+
+func TestUpdateService(t *testing.T) {
+	login_opts := make(map[string]string)
+	login_opts["user"] = os.Getenv("FASTLY_TEST_USER")
+	login_opts["password"] = os.Getenv("FASTLY_TEST_PASSWORD")
+	g, err := New(login_opts)
+	if err != nil {
+		t.Errorf("Error logging into fastly: %s", err.Error())
+	}
+	serviceName := makeServiceName()
+	serviceName2 := makeServiceName()
+	s1, err := g.NewService(serviceName)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	defer s1.Delete()
+	s2, _ := g.GetService(s1.Id)
+	params := map[string]string{"name": serviceName2}
+	err = s2.Update(params)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if s2.Name != serviceName2 {
+		t.Errorf("Service name should have been %s, but was %s instead", serviceName2, s2.Name)
+	}
+	s3, _ := g.GetService(s1.Id)
+	if s3.Name == s1.Name {
+		t.Errorf("Service name did not update at source, expected %s, got %s", serviceName2, s3.Name)
 	}
 }
 
