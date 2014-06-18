@@ -153,7 +153,7 @@ func (c *Client) Delete(url string) (*http.Response, error) {
 func (c *Client) Put(url string, data url.Values, contentType ...string) (*http.Response, error) {
 	bodyStr := data.Encode()
 	request, err := http.NewRequest("PUT", c.makeURL(url), strings.NewReader(bodyStr))
-	request.Header.Set("content-type", setContentType(cType))
+	request.Header.Set("content-type", setContentType(contentType))
 	if err != nil {
 		return nil, err
 	}

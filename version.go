@@ -100,4 +100,9 @@ func (v *Version) Clone() (*Version, error) {
 func (v *Version) Activate() error {
 
 }
-*
+*/
+
+func (v *Version) baseURL(task string) string {
+	vURL := fmt.Sprintf("version/%d/%s", v.Number, task)
+	return v.service.TaskURL(vURL)
+}

@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+var G *Ghastly
+var S *Service
+
 func makeServiceName() string {
 	return fmt.Sprintf("ghastly-test-%d-%d", os.Getpid(), rand.Int31())
 }
@@ -173,25 +176,29 @@ func TestUpdateService(t *testing.T) {
 	}
 }
 
-func TestVersion(t *testing.T) {
+// one service from here on out
+func TestSetupService(t *testing.T) {
 	login_opts := make(map[string]string)
 	login_opts["user"] = os.Getenv("FASTLY_TEST_USER")
 	login_opts["password"] = os.Getenv("FASTLY_TEST_PASSWORD")
-	g, err := New(login_opts)
+	var err error
+	G, err = New(login_opts)
 	if err != nil {
 		t.Errorf("Error logging into fastly: %s", err.Error())
 	}
 	serviceName := makeServiceName()
-	s, err := g.NewService(serviceName)
-	defer s.Delete()
+	S, err = G.NewService(serviceName)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	v, err := s.NewVersion()
+}
+
+func TestVersion(t *testing.T) {
+	v, err := S.NewVersion()
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	_, err = s.GetVersion(v.Number)
+	_, err = S.GetVersion(v.Number)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -200,4 +207,28 @@ func TestVersion(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
+}
+
+func TestDomain(t *testing.T) {
+	v, err := S.NewVersion()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	domainName := "oiweruaklsjfas.com"
+	domainParams := map[string]string{"name": domainName}
+	d, err := v.NewDomain(domainParams)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if d.Name != domainName {
+		t.Errorf("Created domain name did not match: expected %s, got %s", domainName, d.Name)
+	}
+	if d.Version != v.Number {
+		t.Errorf("Created domain version did not match, expected %d, got %d", v.Number, d.Version)
+	}
+}
+
+// post-test cleanup
+func TestCleanup(t *testing.T) {
+	S.Delete()
 }
