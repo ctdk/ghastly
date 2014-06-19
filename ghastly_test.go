@@ -228,6 +228,28 @@ func TestDomain(t *testing.T) {
 	}
 }
 
+func TestPurge(t *testing.T) {
+	pid, err := G.PurgeURL("http://localhost/img.png")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if pid == "" {
+		t.Errorf("Purge id after purging was unexpectedly nil")
+	}
+
+	// Waiting for being able to activate versions for this
+	/*
+		err = S.PurgeAll()
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+	*/
+	err = S.PurgeKey("uhok")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
 // post-test cleanup
 func TestCleanup(t *testing.T) {
 	S.Delete()

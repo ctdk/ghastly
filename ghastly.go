@@ -14,11 +14,12 @@ import (
 )
 
 type Client struct {
-	ApiKey   string
-	User     string
-	Password string
-	BaseUrl  string
-	Http     *http.Client
+	ApiKey    string
+	User      string
+	Password  string
+	BaseUrl   string
+	Http      *http.Client
+	PurgeHttp *http.Client
 }
 
 type Ghastly struct {
@@ -60,6 +61,9 @@ func login(username, password string, base_url string) (*Client, error) {
 		err = fmt.Errorf("Error logging in: %s", resp.Status)
 		return nil, err
 	}
+	client.PurgeHttp = &http.Client{Jar: client.Http.Jar}
+	purgeURL, _ := url.Parse("https://api.fastly.com/")
+	client.PurgeHttp.Transport = &Transport{Proxy: http.ProxyFromEnvironment, PurgeBaseURL: purgeURL}
 	return client, err
 }
 
@@ -134,7 +138,7 @@ func (c *Client) Post(url string, bodyType string, body io.Reader) (*http.Respon
 }
 
 // Convenience wrapper for DELETE requests.
-func (c *Client) Delete(url string) (*http.Response, error) {
+func (c *Client) Delete(url string, contentType ...string) (*http.Response, error) {
 	request, err := http.NewRequest("DELETE", c.makeURL(url), nil)
 	if err != nil {
 		return nil, err
@@ -172,6 +176,24 @@ func (c *Client) Put(url string, data url.Values, contentType ...string) (*http.
 func (c *Client) PutParams(url string, params map[string]string) (*http.Response, error) {
 	values := c.makeValues(params)
 	return c.Put(url, values, "application/x-www-form-urlencoded")
+}
+
+// Send a PURGE request.
+func (c *Client) Purge(purgeUrl string, contentType ...string) (*http.Response, error) {
+	request, err := http.NewRequest("PURGE", purgeUrl, nil)
+	request.Header.Set("content-type", setContentType(contentType))
+	request.Host = "api.fastly.com"
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.PurgeHttp.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	if err = c.checkRespErr(resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func setContentType(contentType []string) string {
