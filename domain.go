@@ -15,7 +15,7 @@ type Domain struct {
 
 type DomainCheck struct {
 	*Domain
-	Cname string
+	Cname    string
 	IsProper bool
 }
 
@@ -56,13 +56,13 @@ func (v *Version) GetDomain(name string) (*Domain, error) {
 }
 
 // Delete a domain, for the version the domain belongs to.
-func (d *Domain)Delete() error {
+func (d *Domain) Delete() error {
 
 }
 
 // Update a domain, for the version the domain belongs to. Possible parameters
 // for the domain are "name" and "comment".
-func (d *Domain)Update(params map[string]string) error {
+func (d *Domain) Update(params map[string]string) error {
 
 }
 
