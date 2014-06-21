@@ -150,5 +150,5 @@ func (v *Version) populateDomainCheck(domainData []interface{}) (*DomainCheck, e
 	}
 	cname, _ := domainData[1].(string)
 	proper, _ := domainData[2].(bool)
-	return &DomainCheck{ d, cname, proper }, nil
+	return &DomainCheck{d, cname, proper}, nil
 }
