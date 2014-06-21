@@ -1,7 +1,6 @@
 package ghastly
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -42,13 +41,7 @@ func (g *Ghastly) ListServices() ([]*Service, error) {
 		return nil, err
 	}
 
-	var s interface{}
-	dec := json.NewDecoder(resp.Body)
-	if err := dec.Decode(&s); err != nil {
-		return nil, err
-	}
-
-	servicesData := s.([]interface{})
+	servicesData, err := ParseJsonArray(resp.Body)
 	if err != nil {
 		return nil, err
 	}

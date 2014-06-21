@@ -226,6 +226,69 @@ func TestDomain(t *testing.T) {
 	if d.Version != v.Number {
 		t.Errorf("Created domain version did not match, expected %d, got %d", v.Number, d.Version)
 	}
+	// test getting a domain
+	d2, err := v.GetDomain(domainName)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if d2.Name != d.Name {
+		t.Errorf("Gotten domain did not match expected name, expected %s, got %s", d.Name, d2.Name)
+	}
+	err = d.Delete()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	domainParams["name"] = "www.fnerpherder.com"
+	d3, err := v.NewDomain(domainParams)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	domainParams["name"] = "img.fnerpherder.com"
+	domainParams["comment"] = "a comment"
+	d3.Update(domainParams)
+	d4, _ := v.GetDomain(domainParams["name"])
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if d4.Comment != domainParams["comment"] {
+		t.Errorf("Domain comment did not update. Expected '%s', got '%s'", domainParams["comment"], d4.Comment)
+	}
+	dc, err := v.CheckDomain(d4.Name)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if dc.Name != d4.Name {
+		t.Errorf("The checked domain's name isn't right, expected %s, got %s", d4.Name, dc.Name)
+	}
+
+	if dc.IsProper {
+		t.Errorf("That's odd, the proper flag on the checked domain shouldn't be set.")
+	}
+
+	// Should be just the one domain to check
+	checkAll, err := v.CheckAllDomains()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if len(checkAll) != 1 {
+		t.Errorf("The number of domains to check was wrong, expected 1, got %d", len(checkAll))
+	}
+	if checkAll[0].Name != d4.Name {
+		t.Errorf("Got the wrong name back with the checked domain, got %s expected %s", checkAll[0].Name, d4.Name)
+	}
+
+	// and list the domains
+	listAll, err := v.ListDomains()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if len(listAll) != 1 {
+		t.Errorf("The number of domains to list was wrong, expected 1, got %d", len(listAll))
+	}
+	if listAll[0].Name != d4.Name {
+		t.Errorf("Got the wrong name back with the listed domain, got %s expected %s", listAll[0].Name, d4.Name)
+	}
+	d4.Delete()
 }
 
 func TestPurge(t *testing.T) {

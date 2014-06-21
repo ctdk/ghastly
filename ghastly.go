@@ -243,3 +243,12 @@ func ParseJson(data io.ReadCloser) (map[string]interface{}, error) {
 	}
 	return respData, nil
 }
+
+func ParseJsonArray(data io.ReadCloser) ([]interface{}, error) {
+	respData := make([]interface{}, 0)
+	dec := json.NewDecoder(data)
+	if err := dec.Decode(&respData); err != nil {
+		return nil, err
+	}
+	return respData, nil
+}
