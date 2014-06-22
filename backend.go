@@ -1,5 +1,10 @@
 package ghastly
 
+import (
+	"fmt"
+	"strconv"
+)
+
 type Backend struct {
 	Name                string
 	Address             string
@@ -14,5 +19,81 @@ type Backend struct {
 	AutoLoadbalance     int
 	RequestCondition    string
 	Healthcheck         string
+	SSLClientCert string
+	SSLClientKey string
+	SSLHostname string
+	SSLCACert string
+	ClientCert string
 	version             *Version
+}
+
+// Create a new backend for a service and version.
+func (v *Version) NewBackend(params map[string]string) (*Backend, error) {
+	url := v.baseURL("backend")
+	resp, err := v.service.ghastly.PostFormParams(url, params)
+	if err != nil {
+		return nil, err
+	}
+	bData, err := ParseJson(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return v.populateBackend(bData)
+}
+
+// Get a backend associated with this version.
+func (v *Version) GetBackend(name string) (*Backend, error) {
+	task := fmt.Sprintf("backend/%s", name)
+	url := v.baseURL(task)
+	resp, err := v.service.ghastly.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	bData, err := ParseJson(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return v.populateBackend(bData)
+}
+
+// Delete a backend.
+func (b *Backend) Delete() error {
+	task := fmt.Sprintf("backend/%s", b.Name)
+	url := b.version.baseURL(task)
+	_, err := b.version.service.ghastly.Delete(url)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v *Version) populateBackend(backendData map[string]interface{}) (*Backend, error) {
+	name, ok := backendData["name"].(string)
+	if !ok {
+		err := fmt.Errorf("backend name invalid")
+		return nil, err
+	}
+	address, ok := backendData["address"].(string)
+	if !ok {
+		err := fmt.Errorf("backend address invalid")
+		return nil, err
+	}
+	var port uint16
+	if p, ok := backendData["port"].(string); !ok {
+		err := fmt.Errorf("backend port invalid")
+		return nil, err
+	} else {
+		var err error
+		port, err = strconv.ParseUInt(p, 10, 16)
+	}
+
+	comment, _ := backendData["comment"].(string)
+	ipv4, _ := backendData["ipv4"].(string)
+	ipv6, _ := backendData["ipv6"].(string)
+	
+	fmt.Printf("backend stuff: %v\n", backendData)
+	//return &Backend{ Name: name, }, nil
+	return nil, nil
 }

@@ -19,8 +19,8 @@ type DomainCheck struct {
 	IsProper bool
 }
 
-// Create a new domain for a particular version of a service. Possible parameters
-// are "name" and "comment".
+// Create a new domain for a particular version of a service. Possible
+// parameters are "name" and "comment".
 func (v *Version) NewDomain(params map[string]string) (*Domain, error) {
 	url := v.baseURL("domain")
 	resp, err := v.service.ghastly.PostFormParams(url, params)

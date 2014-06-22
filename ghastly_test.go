@@ -313,6 +313,20 @@ func TestPurge(t *testing.T) {
 	}
 }
 
+func TestBackend(t *testing.T) {
+	v, err := S.NewVersion()
+	backendParams := map[string]string{ "name": "backend1", "address": "1.1.1.1", "port": "8080" }
+	_, err = v.NewBackend(backendParams)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	backend2Params := map[string]string{ "name": "backend2", "hostname": "foo.glomphicus.com", "port": "8808" }
+	_, err = v.NewBackend(backend2Params)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
 // post-test cleanup
 func TestCleanup(t *testing.T) {
 	S.Delete()
