@@ -2,7 +2,6 @@ package ghastly
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type Backend struct {
@@ -24,6 +23,10 @@ type Backend struct {
 	SSLHostname string
 	SSLCACert string
 	ClientCert string
+	Comment string
+	Hostname string
+	Ipv4 string
+	Ipv6 string
 	version             *Version
 }
 
@@ -70,6 +73,7 @@ func (b *Backend) Delete() error {
 }
 
 func (v *Version) populateBackend(backendData map[string]interface{}) (*Backend, error) {
+	fmt.Printf("backend data: %v\n", backendData)
 	name, ok := backendData["name"].(string)
 	if !ok {
 		err := fmt.Errorf("backend name invalid")
@@ -81,19 +85,18 @@ func (v *Version) populateBackend(backendData map[string]interface{}) (*Backend,
 		return nil, err
 	}
 	var port uint16
-	if p, ok := backendData["port"].(string); !ok {
+	if p, ok := backendData["port"].(float64); !ok {
 		err := fmt.Errorf("backend port invalid")
 		return nil, err
 	} else {
-		var err error
-		port, err = strconv.ParseUInt(p, 10, 16)
+		port = uint16(p)
 	}
 
 	comment, _ := backendData["comment"].(string)
 	ipv4, _ := backendData["ipv4"].(string)
 	ipv6, _ := backendData["ipv6"].(string)
-	
+	hostname, _ := backendData["hostname"].(string)
+
 	fmt.Printf("backend stuff: %v\n", backendData)
-	//return &Backend{ Name: name, }, nil
-	return nil, nil
+	return &Backend{ Name: name, Address: address, Port: port, Comment: comment, Hostname: hostname, Ipv4: ipv4, Ipv6: ipv6 }, nil
 }
